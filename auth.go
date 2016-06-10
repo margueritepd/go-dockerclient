@@ -51,16 +51,24 @@ type dockerConfig struct {
 func NewAuthConfigurationsFromDockerCfg() (*AuthConfigurations, error) {
 	var r io.Reader
 	var err error
-	p := path.Join(os.Getenv("HOME"), ".docker", "config.json")
+	var p string
+
+	p = path.Join(os.Getenv("DOCKER_CONFIG"), "config.json")
 	r, err = os.Open(p)
-	if err != nil {
-		p := path.Join(os.Getenv("HOME"), ".dockercfg")
-		r, err = os.Open(p)
-		if err != nil {
-			return nil, err
-		}
+	if err == nil {
+		return NewAuthConfigurations(r)
 	}
-	return NewAuthConfigurations(r)
+	p = path.Join(os.Getenv("HOME"), ".docker", "config.json")
+	r, err = os.Open(p)
+	if err == nil {
+		return NewAuthConfigurations(r)
+	}
+	p = path.Join(os.Getenv("HOME"), ".dockercfg")
+	r, err = os.Open(p)
+	if err == nil {
+		return NewAuthConfigurations(r)
+	}
+	return nil, err
 }
 
 // NewAuthConfigurations returns AuthConfigurations from a JSON encoded string in the
